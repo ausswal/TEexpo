@@ -1,0 +1,224 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+############################################
+# TEexpo v1.0 — Transposable Element Explorer
+############################################
+
+VERSION="1.0"
+
+SCRIPT_PATH="$(readlink -f "$0")"
+PREFIX_DIR="$(dirname "$SCRIPT_PATH")/.."
+BASE_DIR="$PREFIX_DIR/share/teexpo"
+SCRIPT_DIR="$BASE_DIR/scripts"
+
+DB_DIR="$HOME/.teexpo/databases"
+
+export SCRIPT_DIR
+export DB_DIR
+
+############################################
+# HELP
+############################################
+
+print_help() {
+cat <<EOF
+
+TEexpo v${VERSION}
+Transposable Element identification pipeline
+
+USAGE:
+  teexpo <genome.fasta>
+  teexpo download-db
+  teexpo check-db
+  teexpo -h | --help
+  teexpo -v | --version
+
+EOF
+}
+
+############################################
+# DATABASE INSTALLATION
+############################################
+
+download_db() {
+
+mkdir -p "$DB_DIR"
+
+echo "======================================"
+echo "Installing TEexpo databases..."
+echo "Location: $DB_DIR"
+echo "======================================"
+
+################################
+# PFAM
+################################
+
+if [[ ! -f "$DB_DIR/Pfam-A.hmm.h3p" ]]; then
+    echo "Downloading Pfam-A..."
+    curl -L \
+    https://ftp.ebi.ac.uk/pub/databases/Pfam/current_release/Pfam-A.hmm.gz \
+    -o "$DB_DIR/Pfam-A.hmm.gz"
+
+    gunzip -f "$DB_DIR/Pfam-A.hmm.gz"
+
+    echo "Indexing Pfam..."
+    hmmpress "$DB_DIR/Pfam-A.hmm"
+    echo "✔ Pfam installed"
+else
+    echo "✔ Pfam already installed"
+fi
+
+################################
+# RepeatPeps
+################################
+
+if [[ ! -f "$DB_DIR/RepeatPeps.lib" ]]; then
+    echo "Downloading RepeatPeps library..."
+    wget -q --show-progress \
+    https://raw.githubusercontent.com/Dfam-consortium/RepeatMasker/master/Libraries/RepeatPeps.lib \
+    -O "$DB_DIR/RepeatPeps.lib"
+
+    # Verify file size (~17MB expected)
+    size=$(stat -c%s "$DB_DIR/RepeatPeps.lib")
+    if [[ $size -lt 10000000 ]]; then
+        echo "❌ RepeatPeps download corrupted"
+        exit 1
+    fi
+
+    # Validate FASTA
+    grep -q "^>" "$DB_DIR/RepeatPeps.lib" || {
+        echo "❌ RepeatPeps file not valid FASTA"
+        exit 1
+    }
+
+    echo "✔ RepeatPeps downloaded"
+else
+    echo "✔ RepeatPeps already exists"
+fi
+
+################################
+# Build RepeatPeps BLAST DB
+################################
+
+if [[ ! -f "$DB_DIR/RepeatPeps.lib.pin" ]]; then
+    echo "Building RepeatPeps BLAST database..."
+    makeblastdb \
+        -in "$DB_DIR/RepeatPeps.lib" \
+        -dbtype prot \
+        -parse_seqids \
+        -out "$DB_DIR/RepeatPeps.lib"
+    echo "✔ RepeatPeps BLAST DB created"
+else
+    echo "✔ RepeatPeps BLAST DB already exists"
+fi
+
+################################
+# SwissProt FASTA
+################################
+
+if [[ ! -f "$DB_DIR/uniprot_sprot.fasta" ]]; then
+    echo "Downloading SwissProt..."
+    curl -L \
+    https://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz \
+    -o "$DB_DIR/uniprot_sprot.fasta.gz"
+
+    gunzip -f "$DB_DIR/uniprot_sprot.fasta.gz"
+    echo "✔ SwissProt downloaded"
+else
+    echo "✔ SwissProt FASTA already exists"
+fi
+
+################################
+# SwissProt BLAST DB
+################################
+
+if [[ ! -f "$DB_DIR/uniprot_sprot.fasta.pin" ]]; then
+    echo "Building SwissProt BLAST database..."
+    makeblastdb \
+        -in "$DB_DIR/uniprot_sprot.fasta" \
+        -dbtype prot \
+        -parse_seqids \
+        -out "$DB_DIR/uniprot_sprot.fasta"
+    echo "✔ SwissProt BLAST DB created"
+else
+    echo "✔ SwissProt BLAST DB already exists"
+fi
+
+echo ""
+echo "======================================"
+echo "✅ All databases installed successfully"
+echo "======================================"
+
+exit 0
+}
+
+############################################
+# DATABASE CHECK
+############################################
+
+check_db() {
+echo "Checking TEexpo databases..."
+
+[[ -f "$DB_DIR/Pfam-A.hmm.h3p" ]] || { echo "❌ Pfam DB missing"; exit 1; }
+
+[[ -f "$DB_DIR/RepeatPeps.lib" ]] || { echo "❌ RepeatPeps library missing"; exit 1; }
+[[ -f "$DB_DIR/RepeatPeps.lib.pin" ]] || { echo "❌ RepeatPeps BLAST DB (.pin) missing"; exit 1; }
+[[ -f "$DB_DIR/RepeatPeps.lib.phr" ]] || { echo "❌ RepeatPeps BLAST DB (.phr) missing"; exit 1; }
+[[ -f "$DB_DIR/RepeatPeps.lib.psq" ]] || { echo "❌ RepeatPeps BLAST DB (.psq) missing"; exit 1; }
+
+[[ -f "$DB_DIR/uniprot_sprot.fasta" ]] || { echo "❌ SwissProt FASTA missing"; exit 1; }
+[[ -f "$DB_DIR/uniprot_sprot.fasta.pin" ]] || { echo "❌ SwissProt BLAST DB (.pin) missing"; exit 1; }
+[[ -f "$DB_DIR/uniprot_sprot.fasta.phr" ]] || { echo "❌ SwissProt BLAST DB (.phr) missing"; exit 1; }
+[[ -f "$DB_DIR/uniprot_sprot.fasta.psq" ]] || { echo "❌ SwissProt BLAST DB (.psq) missing"; exit 1; }
+
+echo "✔ All databases detected"
+}
+
+############################################
+# ARGUMENT PARSING
+############################################
+
+[[ $# -eq 0 ]] && { print_help; exit 0; }
+
+case "$1" in
+-h|--help) print_help ; exit 0 ;;
+-v|--version) echo "TEexpo v${VERSION}" ; exit 0 ;;
+download-db) download_db ;;
+check-db) check_db ; exit 0 ;;
+esac
+
+############################################
+# MAIN PIPELINE
+############################################
+
+GENOME="$1"
+[[ -f "$GENOME" ]] || { echo "❌ ERROR: Genome file '$GENOME' not found"; exit 1; }
+
+check_db
+
+export GENOME
+
+echo ""
+echo "======================================"
+echo "TEexpo v${VERSION} started"
+echo "Genome: $GENOME"
+echo "Working directory: $(pwd)"
+echo "======================================"
+
+bash "$SCRIPT_DIR/step0_env_check.sh"
+
+if [[ "$GENOME" != "P_Genome_1.fa" ]]; then
+    cp -f "$GENOME" P_Genome_1.fa
+fi
+
+bash "$SCRIPT_DIR/step1_te_identification.sh"
+bash "$SCRIPT_DIR/step2_Filtering_generated_library.sh"
+bash "$SCRIPT_DIR/step3_manual_curation.sh"
+bash "$SCRIPT_DIR/step4_classifying_TE_fasta.sh"
+
+echo ""
+echo "======================================"
+echo "✅ TEexpo finished successfully"
+echo "Results available in final_output/"
+echo "======================================"

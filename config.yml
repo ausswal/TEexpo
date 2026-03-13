@@ -1,0 +1,12 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+upload_channel: bioconda
+
+blacklists: []
+
+requirements:
+  build: []
+  run: []
