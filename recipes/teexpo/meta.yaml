@@ -4,7 +4,7 @@ package:
 
 source:
   url: https://github.com/ausswal/TEexpo/archive/refs/tags/v1.0.0.tar.gz
-  sha256sum v1.0.0.tar.gz
+  sha256: 50b4cb2d8784d825206385684866b2452df359ba3228bf82f047e25ec4a5cc91
 
 build:
   number: 0
@@ -13,7 +13,7 @@ build:
 
 requirements:
   host:
-    - python 3.10
+    - python >=3.10,<3.11
     - pip
   run:
     - python >=3.10,<3.11
@@ -39,15 +39,14 @@ test:
   commands:
     - teexpo --help
     - teexpo --version
-    - cons -help || true
 
 about:
   home: https://github.com/ausswal/TEexpo
   dev_url: https://github.com/ausswal/TEexpo
-  summary: "TEexpo: Automated and curated transposable element annotation pipeline"
+  summary: "TEexpo: Automated and curated transposable element annotation pipeline developed by Swarup Das and Subarna Thakur"
   license: MIT
   license_file: LICENSE
 
 extra:
   recipe-maintainers:
-    - Swarup Das
+    - ausswal
