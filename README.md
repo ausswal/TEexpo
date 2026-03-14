@@ -78,11 +78,15 @@ final_output/
 
 Typical output structure:
 final_output/
-├── TE_library.fa
-├── TE_classification.tsv
-├── RepeatMasker_annotations.gff
-├── RepeatMasker_annotations.out
-└── summary_reports/
+├── Final_TE_Library
+├── RepeatMasker_output/
+├── TE_dashboard_barplot.png
+├── TE_dashboard_family_summary.csv
+├── TE_dashboard_length_hist.png
+├── TE_dashboard_pie.png
+├── TE_dashboard_summary.csv
+└── te_types.txt
+
 
 These outputs can be used for:
 
