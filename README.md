@@ -1,6 +1,10 @@
 # TEexpo v1.0
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19046077.svg)](https://doi.org/10.5281/zenodo.19046077)
+# TEexpo v1.0
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19046077.svg)](https://doi.org/10.5281/zenodo.19046077) 
+[![Bioconda](https://img.shields.io/conda/vn/bioconda/teexpo.svg)](https://anaconda.org/bioconda/teexpo) 
+[![Downloads](https://img.shields.io/conda/dn/bioconda/teexpo.svg)](https://anaconda.org/bioconda/teexpo)
 
 TEexpo is an automated and modular pipeline for genome-wide identification, classification, and curation of transposable elements (TEs).  
 The pipeline integrates multiple widely used bioinformatics tools into a unified framework, enabling reproducible TE discovery and annotation with minimal manual intervention.
