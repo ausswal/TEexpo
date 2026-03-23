@@ -1,7 +1,5 @@
 # TEexpo v1.0
 
-# TEexpo v1.0
-
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19046077.svg)](https://doi.org/10.5281/zenodo.19046077) 
 [![Bioconda](https://img.shields.io/conda/vn/bioconda/teexpo.svg)](https://anaconda.org/bioconda/teexpo) 
 [![Downloads](https://img.shields.io/conda/dn/bioconda/teexpo.svg)](https://anaconda.org/bioconda/teexpo)
